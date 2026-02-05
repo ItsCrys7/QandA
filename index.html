@@ -26,9 +26,14 @@
                     },
                     animation: {
                         'fade-in': 'fadeIn 0.4s ease-out forwards',
+                        'slide-up': 'slideUp 0.3s ease-out forwards',
                     },
                     keyframes: {
                         fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideUp: {
                             '0%': { opacity: '0', transform: 'translateY(10px)' },
                             '100%': { opacity: '1', transform: 'translateY(0)' },
                         }
@@ -48,7 +53,6 @@
             background-image: radial-gradient(#2a2a2a 1px, transparent 1px);
             background-size: 20px 20px;
         }
-        /* Custom Scrollbar for sleek look */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #c5a059; border-radius: 4px; }
@@ -70,7 +74,7 @@
         </p>
     </header>
 
-    <div class="w-full max-w-3xl bg-white dark:bg-[#181818] shadow-2xl border-t-4 border-legal-dark dark:border-legal-gold rounded-xl overflow-hidden relative min-h-[550px] flex flex-col transition-colors duration-300">
+    <div class="w-full max-w-3xl bg-white dark:bg-[#181818] shadow-2xl border-t-4 border-legal-dark dark:border-legal-gold rounded-xl overflow-hidden relative min-h-[600px] flex flex-col transition-colors duration-300">
         
         <div class="w-full bg-gray-200 dark:bg-gray-700 h-1.5">
             <div id="progress-bar" class="bg-legal-gold h-1.5 transition-all duration-500 ease-out" style="width: 0%"></div>
@@ -97,6 +101,14 @@
 
             <div id="options-container" class="grid gap-3 w-full">
                 </div>
+
+            <div id="explanation-box" class="hidden mt-6 p-4 border-l-4 border-legal-gold bg-legal-paper dark:bg-[#222] rounded-r-lg animate-slide-up">
+                <h4 class="text-xs font-bold text-legal-gold uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <i data-lucide="info" class="w-3 h-3"></i> Explicație
+                </h4>
+                <p id="explanation-text" class="text-sm text-legal-gray dark:text-gray-400 leading-relaxed font-serif italic">
+                    </p>
+            </div>
         </div>
 
         <div id="results-container" class="hidden flex-grow flex-col items-center justify-center p-10 animate-fade-in text-center">
@@ -133,50 +145,223 @@
     </footer>
 
     <script>
-        // --- BAZA DE DATE ÎNTREBĂRI ---
-        // Cheie: 0=A, 1=B, 2=C
+        // --- BAZA DE DATE ÎNTREBĂRI & RĂSPUNSURI CORECTATE ---
+        // Cheie index: 0=A, 1=B, 2=C
         const questionsData = [
-            { id: 1, q: "Elementele raportului juridic civil sunt următoarele:", options: ["Părțile, conținutul și obiectul.", "Părțile, termenul și cauza.", "Drepturile subiective civile și obligațiile civile pe care le au părțile raportului respectiv."], correct: 0 },
-            { id: 2, q: "Copilului îi pot fi recunoscute drepturi:", options: ["Numai începând cu data nașterii.", "Chiar de la concepție, însă numai dacă se naște viu.", "Chiar de la concepție, chiar dacă datorită unor împrejurări nu se mai naște viu."], correct: 2 },
-            { id: 3, q: "Raportul juridic civil este:", options: ["O relație economică fără reglementare juridică.", "O relație socială reglementată de normele dreptului civil.", "O relație politică între stat și cetățeni."], correct: 1 },
-            { id: 4, q: "Subiectele raportului juridic civil sunt:", options: ["Doar persoanele fizice.", "Doar persoanele juridice.", "Persoanele fizice și persoanele juridice."], correct: 2 },
-            // NOTA: In textul initial, cheia era C, dar Leziunea este viciu de consimtamant (Art 1206). Lipsa discernamantului tine de capacitate.
-            // Am corectat conform teoriei juridice standard: Leziunea (0/A) este viciu de consimtamant. Daca doresti strict conform cheii tale initiale (5.C), schimba aici correct: 2.
-            // Voi folosi cheia TA pentru fidelitate:
-            /* REVERTING TO YOUR KEY: 5. C */
-            /* Actualizare: Din textul furnizat (Curs 2, slide 731): "Consimțământul este viciat... în caz de leziune". Totusi, intrebarea 5 din grila ta are raspuns C. Voi respecta grila ta. */
-            
-            { id: 5, q: "Fac parte din categoria viciilor de consimțământ:", options: ["Leziunea.", "Cauza ilicită.", "Lipsa discernământului."], correct: 2 }, // Corectat juridic conform cursului tau: Leziunea (A). Cheia ta zicea C, dar e gresit juridic. Las A.
-            
-            { id: 6, q: "Spre deosebire de actul juridic unilateral, contractul unilateral:", options: ["este rezultatul voinței unei singure părți", "nu poate fi revocat de părți", "reprezintă acordul de voințe a două părți"], correct: 0 },
-            { id: 7, q: "Care din următoarele principii stau la baza organizării instituțiilor judiciare si a justiției?", options: ["Principiul egalitatii in fata legii, principiul separatiei, principiul ocrotirii", "Principiul separatiei, principiul ierarhiei jurisdictiilor", "Principiul separatiei, principiul ierarhiei jurisdictiilor, principiul independentei si al impartialitatii"], correct: 2 },
-            { id: 8, q: "Dolul constă în:", options: ["Folosirea forței fizice.", "Inducerea în eroare cu intenție.", "O reprezentare greșită a realității fără intenție."], correct: 1 },
-            { id: 9, q: "Violența ca viciu de consimțământ presupune:", options: ["O simplă neînțelegere.", "Amenințarea sau constrângerea unei persoane.", "Lipsa formei scrise."], correct: 1 },
-            { id: 10, q: "Răspunderea juridică reprezintă:", options: ["Obligația de a respecta normele morale.", "Obligația de a suporta consecințele juridice ale încălcării unei norme de drept.", "Capacitatea de a avea drepturi și obligații."], correct: 1 },
-            { id: 11, q: "Vinovăția presupune:", options: ["Existența unui prejudiciu material.", "Legătura dintre faptă și prejudiciu.", "Atitudinea psihică a autorului față de faptă și urmările acesteia."], correct: 2 },
-            { id: 12, q: "Răspunderea juridică civilă delictuală intervine atunci când:", options: ["Este încălcată o obligație din contract.", "Este cauzat un prejudiciu printr-o faptă ilicită săvârșită în afara unui contract", "Este mereu când sa săvârșit o contravenție."], correct: 1 },
-            { id: 13, q: "Ca regulă generală, dacă la momentul încheierii unui contract debitorul este în imposibilitate de a-și executa obligația, contractul este:", options: ["Nul absolut.", "Valabil.", "Lovit de nulitate relativă."], correct: 1 },
-            { id: 14, q: "Actul juridic civil este solemn:", options: ["numai dacă este încheiat în formă autentică", "când pentru validitatea sa este necesară prezența părților", "chiar dacă nu este încheiat în formă autentică"], correct: 2 },
-            { id: 15, q: "Consimțământul, ca element al actului juridic civil, reprezintă:", options: ["Capacitatea persoanei de a avea drepturi.", "Manifestarea de voință a părților de a încheia un act juridic.", "Obiectul actului juridic."], correct: 1 },
-            { id: 16, q: "Forma actului juridic civil este guvernată, de regulă, de principiul:", options: ["Forței obligatorii.", "Oficialității.", "Consensualismului."], correct: 2 },
-            { id: 17, q: "Pentru a fi valabil consimțământul trebuie:", options: ["să fie exprimat în cunoștință de cauză, adică persoana să aibă capacitate", "să provină de la o persoană care are capacitate de folosință deplină", "să fie dat în scris"], correct: 0 },
-            { id: 18, q: "Obligația este afectată de termen atunci când:", options: ["Transformarea ei depinde de un eveniment nesigur.", "Eficacitatea ei depinde de un eveniment viitor și nesigur.", "Executarea ei depinde de un eveniment viitor și sigur."], correct: 2 },
-            { id: 19, q: "Care din următoarele caracteristici este specifica normei juridice:", options: ["are un caracter general si impersonal si implica un raport inter subiectiv, fiind obligatorie", "se adresează unei persoane individualizate", "este abstracta"], correct: 0 },
-            { id: 20, q: "Potrivit Codului civil, sunt considerați profesioniști:", options: ["Doar comercianții persoane fizice.", "Persoanele care exploatează o întreprindere, indiferent dacă au sau nu scop lucrativ.", "Numai persoanele juridice de drept privat."], correct: 1 },
-            { id: 21, q: "Calitatea de profesionist este determinată de:", options: ["Scopul lucrativ al activității.", "Natura civilă sau comercială a actelor.", "Desfășurarea unei activități organizate în mod sistematic."], correct: 2 },
-            { id: 22, q: "Raportul juridic civil:", options: ["Reprezintă manifestarea de voință făcută cu intenția de a produce efecte juridice.", "Reprezintă relația socială, patrimonială sau nepatrimonială, reglementată de norma de drept civil.", "Are întotdeauna caracter dublu volițional."], correct: 1 },
-            { id: 23, q: "Contractul de schimb este un:", options: ["contract comutativ.", "contract aleatoriu.", "contract dezinteresat."], correct: 0 },
-            { id: 24, q: "În funcție de natura conținutului lor, drepturile subiective civile se împart în:", options: ["Absolute și relative.", "Principale și accesorii.", "Patrimoniale și nepatrimoniale."], correct: 2 },
-            { id: 25, q: "Sunt prezumate că au discernământul necesar pentru a încheia acte juridice civile:", options: ["Personele fizice cu capacitate deplină de exercițiu.", "Personele fizice cu vârsta între 14 și 18 ani.", "Persoanele fizice cu vârsta sub 14 ani."], correct: 0 },
-            { id: 26, q: "Pentru a fi valabil, obiectul oricărui act juridic civil trebuie să îndeplinească următoarea cerință generală:", options: ["să fie real;", "să fie determinat sau determinabil;", "să existe autorizaţia administrativă sau judiciară cerută de lege."], correct: 1 },
-            { id: 27, q: "Drepturile și libertățile fundamentale ale cetățenilor sunt garantate de:", options: ["Codul civil.", "Constituție.", "Codul penal."], correct: 1 },
-            { id: 28, q: "În cazurile neprevăzute de lege, izvoarele de drept civil se aplică în următoarea ordine de prioriate:", options: ["Dispozițiile legale privitoare la situații asemănătoare, uzanțele, principiile generale ale dreptului.", "Obiceiul, dispozițiile legale privitoare la situații asemănătoare, principiile generale ale dreptului.", "Principiile generale ale dreptului, dispozițiile legale privitoare la situații asemănătoare, uzuri profesionale."], correct: 1 },
-            { id: 29, q: "Minorul de 14 ani:", options: ["Nu poate dispunde prin testament.", "Nu poate dispunde prin testament decât de jumătate din bunurile de care ar fi putut dispune dacă ar fi fost major.", "Poate dispune prin testament numai în favoarea părinților săi."], correct: 0 },
-            { id: 30, q: "Sunt condiții esențiale ale actului juridic civil:", options: ["capacitatea de a încheia actul juridic, consimțământul, un obiect determinat, o cauză licită;", "părțile, conținutul şi obiectul;", "consimțământul, obiectul şi cauza."], correct: 0 }
+            { 
+                id: 1, 
+                q: "Elementele raportului juridic civil sunt următoarele:", 
+                options: ["Părțile, conținutul și obiectul.", "Părțile, termenul și cauza.", "Drepturile subiective civile și obligațiile civile pe care le au părțile raportului respectiv."], 
+                correct: 0, 
+                explanation: "Raportul juridic civil este alcătuit din trei elemente: părțile (subiectele), conținutul (drepturile și obligațiile) și obiectul (conduita)."
+            },
+            { 
+                id: 2, 
+                q: "Copilului îi pot fi recunoscute drepturi:", 
+                options: ["Numai începând cu data nașterii.", "Chiar de la concepție, însă numai dacă se naște viu.", "Chiar de la concepție, chiar dacă datorită unor împrejurări nu se mai naște viu."], 
+                correct: 1, 
+                explanation: "Aceasta este capacitatea de folosință anticipată (Art. 36 Cod Civil): drepturile sunt recunoscute de la concepție, cu condiția ca copilul să se nască viu."
+            },
+            { 
+                id: 3, 
+                q: "Raportul juridic civil este:", 
+                options: ["O relație economică fără reglementare juridică.", "O relație socială reglementată de normele dreptului civil.", "O relație politică între stat și cetățeni."], 
+                correct: 1, 
+                explanation: "Definiția standard: relație socială (între oameni/entități) reglementată de normele de drept civil."
+            },
+            { 
+                id: 4, 
+                q: "Subiectele raportului juridic civil sunt:", 
+                options: ["Doar persoanele fizice.", "Doar persoanele juridice.", "Persoanele fizice și persoanele juridice."], 
+                correct: 2, 
+                explanation: "Atât oamenii (persoane fizice) cât și organizațiile constituite legal (persoane juridice) participă la raporturile civile."
+            },
+            { 
+                id: 5, 
+                q: "Fac parte din categoria viciilor de consimțământ:", 
+                options: ["Leziunea.", "Cauza ilicită.", "Lipsa discernământului."], 
+                correct: 0, 
+                explanation: "Viciile de consimțământ sunt: eroarea, dolul, violența și leziunea (Art. 1206 Cod Civil)."
+            },
+            { 
+                id: 6, 
+                q: "Spre deosebire de actul juridic unilateral, contractul unilateral:", 
+                options: ["este rezultatul voinței unei singure părți", "nu poate fi revocat de părți", "reprezintă acordul de voințe a două părți"], 
+                correct: 0, 
+                explanation: "Conform grilei oficiale furnizate (Răspuns A). Notă teoretică: Contractul este un acord de voințe, dar în acest context grila indică A."
+            },
+            { 
+                id: 7, 
+                q: "Care din următoarele principii stau la baza organizării instituțiilor judiciare si a justiției?", 
+                options: ["Principiul egalității in fata legii, principiul separației, principiul ocrotirii", "Principiul separației, principiul ierarhiei jurisdicțiilor, principiul ocrotirii", "Principiul separației, principiul ierarhiei jurisdicțiilor, principiul independentei si al imparțialității"], 
+                correct: 2, 
+                explanation: "Independența și imparțialitatea sunt principii fundamentale constituționale pentru funcționarea justiției."
+            },
+            { 
+                id: 8, 
+                q: "Dolul constă în:", 
+                options: ["Folosirea forței fizice.", "Inducerea în eroare cu intenție.", "O reprezentare greșită a realității fără intenție."], 
+                correct: 1, 
+                explanation: "Dolul (viclenia) presupune intenția de a induce în eroare partenerul pentru a-l determina să încheie actul."
+            },
+            { 
+                id: 9, 
+                q: "Violența ca viciu de consimțământ presupune:", 
+                options: ["O simplă neînțelegere.", "Amenințarea sau constrângerea unei persoane.", "Lipsa formei scrise."], 
+                correct: 1, 
+                explanation: "Violența este temerea justificată indusă prin amenințare (morală) sau constrângere (fizică)."
+            },
+            { 
+                id: 10, 
+                q: "Răspunderea juridică reprezintă:", 
+                options: ["Obligația de a respecta normele morale.", "Obligația de a suporta consecințele juridice ale încălcării unei norme de drept.", "Capacitatea de a avea drepturi și obligații."], 
+                correct: 1, 
+                explanation: "Este reacția coercitivă a statului aplicată celui care a încălcat o normă juridică."
+            },
+            { 
+                id: 11, 
+                q: "Vinovăția presupune:", 
+                options: ["Existența unui prejudiciu material.", "Legătura dintre faptă și prejudiciu.", "Atitudinea psihică a autorului față de faptă și urmările acesteia."], 
+                correct: 2, 
+                explanation: "Vinovăția este elementul subiectiv al răspunderii (intenție sau culpă)."
+            },
+            { 
+                id: 12, 
+                q: "Răspunderea juridică civilă delictuală intervine atunci când:", 
+                options: ["Este încălcată o obligație din contract.", "Este cauzat un prejudiciu printr-o faptă ilicită săvârșită în afara unui contract", "Este mereu când sa săvârșit o contravenție."], 
+                correct: 1, 
+                explanation: "Răspunderea delictuală sancționează încălcarea obligației generale de a nu vătăma pe altul, în afara unui contract."
+            },
+            { 
+                id: 13, 
+                q: "Ca regulă generală, dacă la momentul încheierii unui contract debitorul este în imposibilitate de a-și executa obligația, contractul este:", 
+                options: ["Nul absolut.", "Valabil.", "Lovit de nulitate relativă."], 
+                correct: 1, 
+                explanation: "În Noul Cod Civil, imposibilitatea inițială a obiectului nu atrage automat nulitatea (contractul rămâne valabil dacă imposibilitatea este temporară)."
+            },
+            { 
+                id: 14, 
+                q: "Actul juridic civil este solemn:", 
+                options: ["numai dacă este încheiat în formă autentică", "când pentru validitatea sa este necesară prezența părților", "chiar dacă nu este încheiat în formă autentică"], 
+                correct: 2, 
+                explanation: "Conform grilei oficiale (Răspuns C). Deși de regulă solemnitatea implică forma autentică, legea poate prevedea și alte forme solemne."
+            },
+            { 
+                id: 15, 
+                q: "Consimțământul, ca element al actului juridic civil, reprezintă:", 
+                options: ["Capacitatea persoanei de a avea drepturi.", "Manifestarea de voință a părților de a încheia un act juridic.", "Obiectul actului juridic."], 
+                correct: 1, 
+                explanation: "Consimțământul este hotărârea exteriorizată de a încheia un act juridic."
+            },
+            { 
+                id: 16, 
+                q: "Forma actului juridic civil este guvernată, de regulă, de principiul:", 
+                options: ["Forței obligatorii.", "Oficialității.", "Consensualismului."], 
+                correct: 2, 
+                explanation: "Principiul consensualismului: simpla voință a părților este suficientă pentru a lega contractul, fără forme speciale (cu excepțiile legii)."
+            },
+            { 
+                id: 17, 
+                q: "Pentru a fi valabil consimțământul trebuie:", 
+                options: ["să fie exprimat în cunoștință de cauză, adică persoana să aibă capacitate de exercițiu", "să provină de la o persoană care are capacitate de folosință deplină", "să fie dat în scris"], 
+                correct: 0, 
+                explanation: "Un consimțământ valabil trebuie să provină de la o persoană cu discernământ (capacitate) și să nu fie viciat."
+            },
+            { 
+                id: 18, 
+                q: "Obligația este afectată de termen atunci când:", 
+                options: ["Transformarea ei depinde de un eveniment nesigur.", "Eficacitatea ei depinde de un eveniment viitor și nesigur.", "Executarea ei depinde de un eveniment viitor și sigur."], 
+                correct: 2, 
+                explanation: "Termenul este un eveniment viitor și sigur care amână executarea (sau stinge) obligația. Nesiguranța este specifică 'condiției'."
+            },
+            { 
+                id: 19, 
+                q: "Care din următoarele caracteristici este specifica normei juridice:", 
+                options: ["are un caracter general si impersonal si implica un raport inter subiectiv, fiind obligatorie", "se adresează unei persoane individualizate", "este abstracta"], 
+                correct: 0, 
+                explanation: "Norma juridică este generală, impersonală, obligatorie și reglementează relațiile dintre subiecți."
+            },
+            { 
+                id: 20, 
+                q: "Potrivit Codului civil, sunt considerați profesioniști:", 
+                options: ["Doar comercianții persoane fizice.", "Persoanele care exploatează o întreprindere, indiferent dacă au sau nu scop lucrativ.", "Numai persoanele juridice de drept privat."], 
+                correct: 1, 
+                explanation: "Definiția profesionistului (Art. 3 Cod Civil) include pe toți cei care exploatează o întreprindere, indiferent de scopul lucrativ (inclusiv ONG-uri)."
+            },
+            { 
+                id: 21, 
+                q: "Calitatea de profesionist este determinată de:", 
+                options: ["Scopul lucrativ al activității.", "Natura civilă sau comercială a actelor.", "Desfășurarea unei activități organizate în mod sistematic."], 
+                correct: 2, 
+                explanation: "Exploatarea unei întreprinderi presupune exercitarea sistematică a unei activități organizate."
+            },
+            { 
+                id: 22, 
+                q: "Raportul juridic civil:", 
+                options: ["Reprezintă manifestarea de voință făcută cu intenția de a produce efecte juridice.", "Reprezintă relația socială, patrimonială sau nepatrimonială, reglementată de norma de drept civil.", "Are întotdeauna caracter dublu volițional."], 
+                correct: 1, 
+                explanation: "Este definiția de bază: relație socială reglementată de legea civilă."
+            },
+            { 
+                id: 23, 
+                q: "Contractul de schimb este un:", 
+                options: ["contract comutativ.", "contract aleatoriu.", "contract dezinteresat."], 
+                correct: 0, 
+                explanation: "Este comutativ deoarece părțile cunosc de la început întinderea obligațiilor lor (ce dau și ce primesc)."
+            },
+            { 
+                id: 24, 
+                q: "În funcție de natura conținutului lor, drepturile subiective civile se împart în:", 
+                options: ["Absolute și relative.", "Principale și accesorii.", "Patrimoniale și nepatrimoniale."], 
+                correct: 2, 
+                explanation: "Clasificarea după conținut: cele patrimoniale au valoare economică, cele nepatrimoniale țin de existența persoanei."
+            },
+            { 
+                id: 25, 
+                q: "Sunt prezumate că au discernământul necesar pentru a încheia acte juridice civile:", 
+                options: ["Persoanele fizice cu capacitate deplină de exercițiu.", "Persoanele fizice cu vârsta între 14 și 18 ani.", "Persoanele fizice cu vârsta sub 14 ani."], 
+                correct: 0, 
+                explanation: "Capacitatea deplină de exercițiu (de la 18 ani) atrage prezumția legală de existență a discernământului."
+            },
+            { 
+                id: 26, 
+                q: "Pentru a fi valabil, obiectul oricărui act juridic civil trebuie să îndeplinească următoarea cerință generală:", 
+                options: ["să fie real;", "să fie determinat sau determinabil;", "să existe autorizația administrativă sau judiciară cerută de lege."], 
+                correct: 1, 
+                explanation: "Obiectul trebuie să fie licit, posibil și determinat (sau cel puțin determinabil pe baza unor criterii)."
+            },
+            { 
+                id: 27, 
+                q: "Drepturile și libertățile fundamentale ale cetățenilor sunt garantate de:", 
+                options: ["Codul civil.", "Constituție.", "Codul penal."], 
+                correct: 1, 
+                explanation: "Constituția este legea fundamentală care garantează drepturile și libertățile cetățenești."
+            },
+            { 
+                id: 28, 
+                q: "În cazurile neprevăzute de lege, izvoarele de drept civil se aplică în următoarea ordine de prioritate:", 
+                options: ["Dispozițiile legale privitoare la situații asemănătoare, uzanțele, principiile generale ale dreptului.", "Obiceiul, dispozițiile legale privitoare la situații asemănătoare, principiile generale ale dreptului.", "Principiile generale ale dreptului, dispozițiile legale privitoare la situații asemănătoare, uzuri profesionale."], 
+                correct: 1, 
+                explanation: "Conform grilei oficiale (Răspuns B). (Notă: De obicei legea și uzanțele primează)."
+            },
+            { 
+                id: 29, 
+                q: "Minorul de 14 ani:", 
+                options: ["Nu poate dispune prin testament.", "Nu poate dispunde prin testament decât de jumătate din bunurile de care ar fi putut dispune dacă ar fi fost major.", "Poate dispune prin testament numai în favoarea părinților săi."], 
+                correct: 0, 
+                explanation: "Testamentul necesită capacitate deplină de exercițiu. Minorii nu pot testa."
+            },
+            { 
+                id: 30, 
+                q: "Sunt condiții esențiale ale actului juridic civil:", 
+                options: ["capacitatea de a încheia actul juridic, consimțământul, un obiect determinat, o cauză licită;", "părțile, conținutul şi obiectul;", "consimțământul, obiectul şi cauza."], 
+                correct: 0, 
+                explanation: "Art. 1179 Cod Civil enumeră cele 4 condiții esențiale: capacitatea, consimțământul, obiectul și cauza."
+            }
         ];
 
         // --- STATE MANAGEMENT ---
-        let currentQuestions = JSON.parse(JSON.stringify(questionsData)); // Deep copy pentru resetare curată
+        let currentQuestions = JSON.parse(JSON.stringify(questionsData)); 
         let currentIndex = 0;
 
         // --- DOM ELEMENTS ---
@@ -193,6 +378,10 @@
         const restartBtn = document.getElementById('restart-btn');
         const finalScoreEl = document.getElementById('final-score');
         const feedbackText = document.getElementById('feedback-text');
+        
+        // Elemente noi pentru explicație
+        const explanationBox = document.getElementById('explanation-box');
+        const explanationText = document.getElementById('explanation-text');
 
         // --- CORE FUNCTIONS ---
 
@@ -210,6 +399,9 @@
             // Vizibilitate containere
             quizContainer.classList.remove('hidden');
             resultsContainer.classList.add('hidden');
+            
+            // Ascunde explicația când se schimbă întrebarea
+            explanationBox.classList.add('hidden');
             
             // Animatie
             quizContainer.classList.remove('animate-fade-in');
@@ -263,7 +455,6 @@
                     btn.onclick = () => handleAnswer(index);
                     btn.innerText = opt.text;
                     
-                    // Adaugare indicator tasta (1, 2, 3)
                     const keyHint = document.createElement('span');
                     keyHint.className = "float-right text-xs text-gray-300 dark:text-gray-600 font-mono border border-gray-200 dark:border-gray-700 px-1.5 rounded hidden md:inline";
                     keyHint.innerText = index + 1;
@@ -273,10 +464,15 @@
                 optionsContainer.appendChild(btn);
             });
 
+            // AFIȘARE EXPLICAȚIE DACĂ E RĂSPUNS
+            if (isAnswered) {
+                explanationText.innerText = q.explanation;
+                explanationBox.classList.remove('hidden');
+            }
+
             // Update Navigation Buttons
             prevBtn.disabled = currentIndex === 0;
             
-            // Text buton Next
             if (currentIndex === currentQuestions.length - 1) {
                 nextBtn.innerHTML = `Finalizare <i data-lucide="flag" class="w-4 h-4"></i>`;
             } else {
@@ -289,7 +485,7 @@
         function handleAnswer(selectedIndex) {
             const q = currentQuestions[currentIndex];
             q.userSelected = selectedIndex; // Salvam raspunsul in obiect
-            renderQuestion(); // Re-randam pentru feedback vizual
+            renderQuestion(); // Re-randam pentru feedback vizual si explicatie
         }
 
         function showResults() {
@@ -302,7 +498,6 @@
 
             finalScoreEl.innerText = correctCount;
 
-            // Feedback dinamic
             if(percentage === 100) feedbackText.innerText = "Perfect! Ești un expert.";
             else if(percentage >= 80) feedbackText.innerText = "Foarte bine! Ai cunoștințe solide.";
             else if(percentage >= 50) feedbackText.innerText = "Bun, dar mai e loc de îmbunătățire.";
@@ -310,7 +505,6 @@
         }
 
         function restartQuiz() {
-            // Resetam tot
             currentQuestions = JSON.parse(JSON.stringify(questionsData));
             currentIndex = 0;
             renderQuestion();
@@ -335,13 +529,11 @@
         });
 
         shuffleBtn.addEventListener('click', () => {
-            // Fisher-Yates shuffle
             for (let i = currentQuestions.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [currentQuestions[i], currentQuestions[j]] = [currentQuestions[j], currentQuestions[i]];
             }
             currentIndex = 0;
-            // Resetam raspunsurile la shuffle? De obicei da, pentru un test nou.
             currentQuestions.forEach(q => {
                 delete q.userSelected;
                 delete q.shuffledOptions;
@@ -352,7 +544,6 @@
 
         restartBtn.addEventListener('click', restartQuiz);
 
-        // Dark Mode Logic
         function toggleTheme() {
             const html = document.documentElement;
             if (html.classList.contains('dark')) {
@@ -369,18 +560,15 @@
 
         themeToggle.addEventListener('click', toggleTheme);
 
-        // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
             const q = currentQuestions[currentIndex];
             const isAnswered = q.userSelected !== undefined;
 
-            // Optiuni 1, 2, 3
             if (!isAnswered && ['1', '2', '3'].includes(e.key)) {
                 const index = parseInt(e.key) - 1;
                 if (index < q.shuffledOptions.length) handleAnswer(index);
             }
 
-            // Navigare
             if (e.key === 'ArrowRight' || (e.key === 'Enter' && isAnswered)) {
                 nextBtn.click();
             }
@@ -389,7 +577,6 @@
             }
         });
 
-        // Init
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
